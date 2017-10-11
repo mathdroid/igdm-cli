@@ -7,6 +7,7 @@ const chalk = require("chalk");
 const hasAnsi = require("has-ansi");
 const ora = require("ora");
 const moment = require("moment");
+const ms = require("ms");
 const Client = require("instagram-private-api").V1;
 
 let device, storage;
