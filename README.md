@@ -2,6 +2,8 @@
 
 > Instagram's direct message, right in your terminal.
 
+<img src="igdm.gif" width="480">
+
 ## Installation
 
 ```sh
