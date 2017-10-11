@@ -39,6 +39,9 @@ Options:
     -u, --username <username>   Set Instagram username. [default: will prompt]
     -p, --password <password>   Set Instagram password. [default: will prompt]
     -i, --interval <interval>   Set polling interval (seconds) in chat rooms [default: 5]
+
+Notes:
+    In chatroom mode, exit by entering '/end'.
     `);
     process.exit(0);
   }
