@@ -1,7 +1,11 @@
 {
   "name": "igdm-cli",
-  "version": "0.1.6",
-  "files": ["package.json", "README.md", "bin"],
+  "version": "0.1.7",
+  "files": [
+    "package.json",
+    "README.md",
+    "bin"
+  ],
   "bin": {
     "igdm": "bin/index.js"
   },
