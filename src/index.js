@@ -41,7 +41,7 @@ Options:
     -i, --interval <interval>   Set polling interval (seconds) in chat rooms [default: 5]
 
 Notes:
-    In chatroom mode, exit by entering '/end'.
+    In chatroom mode, exit by entering '/end'. Manually refresh the room by entering '/refresh'.
     `);
     process.exit(0);
   }
