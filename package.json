@@ -2,7 +2,7 @@
   "name": "igdm-cli",
   "version": "0.1.5",
   "bin": {
-    "igdm": "index.js"
+    "igdm": "bin/index.js"
   },
   "license": "MIT",
   "dependencies": {
