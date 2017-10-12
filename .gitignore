@@ -1,3 +1,4 @@
+bin/
 stdin.js
 ig-cookie.*.json
 # Created by https://www.gitignore.io/api/node

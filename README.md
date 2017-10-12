@@ -31,6 +31,10 @@ Notes:
     In chatroom mode, exit by entering '/end'.
 ```
 
+## Developing
+
+To transpile our code using babel, you will need `node` version `>= 6.4.0`.
+
 ## License
 
 MIT © [Muhammad Mustadi](https://github.com/mathdroid)
