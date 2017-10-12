@@ -11,6 +11,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "babel-runtime": "^6.26.0",
     "bignumber.js": "^4.1.0",
     "chalk": "^2.1.0",
     "has-ansi": "^3.0.0",
