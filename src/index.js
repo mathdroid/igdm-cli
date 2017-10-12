@@ -156,16 +156,18 @@ Notes:
       let thread = await Client.Thread.getById(session, id);
       let threadTitle = `[${thread._params.threadTitle}]`;
       let msgToSend = [];
+      const getMsgPayload = () => msgToSend.join("");
       const renderInput = async () => {
-        const threadItemsStr = thread.items
-          .sort((a, b) => a._params.created - b._params.created)
-          .map(i => parseMessageString(i))
-          .join("\n");
-        const msgStr = msgToSend.join("");
+        const threadItemsStr = thread.items.length
+          ? thread.items
+              .sort((a, b) => a._params.created - b._params.created)
+              .map(i => parseMessageString(i))
+              .join("\n")
+          : "There are no messages yet.";
         logUpdate(
           `${threadItemsStr}\n\nReply to ${threadTitle} ${chalk.green(
             "›"
-          )} ${msgStr}`
+          )} ${getMsgPayload()}`
         );
       };
 
@@ -189,16 +191,21 @@ Notes:
             process.exit();
           }
           if (key.name === "return" || (key.ctrl && key.name === "u")) {
+            const msgPayload = getMsgPayload();
             if (msgToSend.length <= 0) return;
-            if (msgToSend.join("") === "/end") {
+            if (msgPayload === "/end") {
               logUpdate(`[*] Ended chat with ${threadTitle}.`);
               process.stdin.pause();
               process.stdin.removeListener("keypress", keypressHandler);
               chatLoop = false;
               resolve(key);
+            } else if (msgPayload === "/refresh") {
+              logUpdate("[*] Refreshing");
+              process.stdin.pause();
+              process.stdin.removeListener("keypress", keypressHandler);
+              resolve(key);
             } else {
-              thread.broadcastText(msgToSend.join(""));
-              // console.log("sending ", msgToSend.join(""));
+              thread.broadcastText(msgPayload);
               msgToSend.length = 0;
               updateThread();
             }
