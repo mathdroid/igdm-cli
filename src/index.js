@@ -128,7 +128,7 @@ Notes:
     const inbox = await new Client.Feed.Inbox(session);
     inboxSpinner.text = "Fetching all threads";
     const inboxAll = await inbox.all();
-    inboxSpinner.succeed();
+    inboxSpinner.succeed("All threads have been fetched");
 
     inboxAll.forEach(m =>
       m.accounts.forEach(a => {
