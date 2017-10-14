@@ -8,6 +8,8 @@ const hasAnsi = require("has-ansi");
 const ora = require("ora");
 const moment = require("moment");
 const ms = require("ms");
+const updateNotifier = require("update-notifier");
+const pkg = require("../package.json");
 const Client = require("instagram-private-api").V1;
 
 let device, storage;
@@ -24,7 +26,8 @@ async function main(_argv) {
       help: "h"
     }
   });
-  console.log(`igdm-cli v${require("../package").version}`);
+  console.log(chalk.dim(`igdm-cli v${pkg.version}`));
+  updateNotifier({ pkg }).notify();
   if (argv.version) process.exit(0);
   if (argv.help) {
     console.log(`
