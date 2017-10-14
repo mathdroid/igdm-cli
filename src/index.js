@@ -208,7 +208,7 @@ Notes:
               process.stdin.removeListener("keypress", keypressHandler);
               resolve(key);
             } else {
-              thread.broadcastText(msgPayload);
+              await thread.broadcastText(msgPayload);
               msgToSend.length = 0;
               updateThread();
             }
