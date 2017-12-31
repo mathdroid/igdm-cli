@@ -82,12 +82,20 @@ Notes:
 
   const loginSpinner = ora(`Logging in as ${_username}`).start();
 
-  const session = await Client.Session.create(
-    device,
-    storage,
-    _username,
-    _password
-  );
+  let session
+
+  try {
+    session = await Client.Session.create(
+      device,
+      storage,
+      _username,
+      _password
+    );
+  } catch (e) {
+    console.error(e)
+    console.log(`can't login`)
+    process.exit(1)
+  }
 
   loginSpinner.succeed(`You are logged in as ${_username}`);
 
@@ -121,14 +129,15 @@ Notes:
     )}`;
   };
 
-  while (mainLoop) {
-    const inboxSpinner = ora("Opening inbox").start();
-    const inbox = await new Client.Feed.Inbox(session);
-    inboxSpinner.text = "Fetching all threads";
-    const inboxAll = await inbox.all();
-    inboxSpinner.succeed("All threads have been fetched");
+  const inboxSpinner = ora("Opening inbox").start();
+  let ClientInbox = await new Client.Feed.Inbox(session)
+  inboxSpinner.text = "Fetching recent threads";
+  let inboxBuffer = await ClientInbox.get()
+  inboxSpinner.succeed("All threads have been fetched");
 
-    inboxAll.forEach(m =>
+  while (mainLoop) {
+
+    inboxBuffer.forEach(m =>
       m.accounts.forEach(a => {
         if (!instagramAccounts[a.id]) {
           instagramAccounts[a.id] = a._params;
@@ -136,13 +145,19 @@ Notes:
       })
     );
 
-    const choices = inboxAll.filter(m => m.accounts.length).map(m => ({
+    const inboxFirst = inboxBuffer.filter(m => m.accounts.length).map(m => ({
       name: `${chalk.underline(
         `[${m._params.threadTitle}]`
       )} - ${parseMessageString(m.items[0])}`,
       value: m._params.threadId,
       short: m._params.threadTitle
     }));
+
+    const choices = ClientInbox.isMoreAvailable() ? [...inboxFirst, {
+      name: '[*] Fetch all items',
+      value: 'IGDM_FETCH_ALL',
+      short: 'Fetching all items'
+    }] : inboxFirst
 
     const { id } = await inquirer.prompt({
       name: "id",
@@ -151,79 +166,82 @@ Notes:
       choices
     });
 
-    let chatLoop = true;
+    let chatLoop = id !== 'IGDM_FETCH_ALL' ? true : false;
 
-    while (chatLoop) {
-      let thread = await Client.Thread.getById(session, id);
-      let threadTitle = `[${thread._params.threadTitle}]`;
-      let msgToSend = [];
-      const getMsgPayload = () => msgToSend.join("");
-      const renderInput = async () => {
-        const threadItemsStr = thread.items.length
-          ? thread.items
-            .sort((a, b) => a._params.created - b._params.created)
-            .map(i => parseMessageString(i))
-            .join("\n")
-          : "There are no messages yet.";
-        logUpdate(
-          `${threadItemsStr}\n\nReply to ${threadTitle} ${chalk.green(
-            "›"
-          )} ${getMsgPayload()}`
-        );
-      };
+    let thread = await Client.Thread.getById(session, id)
+    console.log(thread.parseParams(thread.getParams()))
 
-      const updateThread = async () => {
-        thread = await Client.Thread.getById(session, id);
-        renderInput();
-      };
-      const interval = ms(`${argv.interval}s`) || ms("5s");
-      const threadRefreshInterval = setInterval(updateThread, interval);
+    // while (chatLoop) {
+    //   let thread = await Client.Thread.getById(session, id);
+    //   let threadTitle = `[${thread._params.threadTitle}]`;
+    //   let msgToSend = [];
+    //   const getMsgPayload = () => msgToSend.join("");
+    //   const renderInput = async () => {
+    //     const threadItemsStr = thread.items.length
+    //       ? thread.items
+    //         .sort((a, b) => a._params.created - b._params.created)
+    //         .map(i => parseMessageString(i))
+    //         .join("\n")
+    //       : "There are no messages yet.";
+    //     logUpdate(
+    //       `${threadItemsStr}\n\nReply to ${threadTitle} ${chalk.green(
+    //         "›"
+    //       )} ${getMsgPayload()}`
+    //     );
+    //   };
 
-      renderInput();
+    //   const updateThread = async () => {
+    //     thread = await Client.Thread.getById(session, id);
+    //     renderInput();
+    //   };
+    //   const interval = ms(`${argv.interval}s`) || ms("5s");
+    //   const threadRefreshInterval = setInterval(updateThread, interval);
 
-      await new Promise(resolve => {
-        const keypressHandler = async (ch, key = {}) => {
-          if (hasAnsi(key.sequence)) return;
-          if (key.ctrl && key.name === "c") {
-            if (msgToSend.length <= 1) {
-              logUpdate();
-              // readline.moveCursor(process.stdout, 0, -1);
-            }
-            process.exit();
-          }
-          if (key.name === "return" || (key.ctrl && key.name === "u")) {
-            const msgPayload = getMsgPayload();
-            if (msgToSend.length <= 0) return;
-            if (msgPayload === "/end") {
-              logUpdate(`[*] Ended chat with ${threadTitle}.`);
-              process.stdin.pause();
-              process.stdin.removeListener("keypress", keypressHandler);
-              chatLoop = false;
-              resolve(key);
-            } else if (msgPayload === "/refresh") {
-              logUpdate("[*] Refreshing");
-              process.stdin.pause();
-              process.stdin.removeListener("keypress", keypressHandler);
-              resolve(key);
-            } else {
-              await thread.broadcastText(msgPayload);
-              msgToSend.length = 0;
-              updateThread();
-            }
-          } else if (key.name === "backspace") {
-            msgToSend.pop();
-            renderInput();
-          } else {
-            msgToSend.push(ch);
-            renderInput();
-          }
-        };
-        process.stdin.on("keypress", keypressHandler);
-        process.stdin.setRawMode(true);
-        process.stdin.resume();
-      });
-      clearInterval(threadRefreshInterval);
-    }
+    //   renderInput();
+
+    //   await new Promise(resolve => {
+    //     const keypressHandler = async (ch, key = {}) => {
+    //       if (hasAnsi(key.sequence)) return;
+    //       if (key.ctrl && key.name === "c") {
+    //         if (msgToSend.length <= 1) {
+    //           logUpdate();
+    //           // readline.moveCursor(process.stdout, 0, -1);
+    //         }
+    //         process.exit();
+    //       }
+    //       if (key.name === "return" || (key.ctrl && key.name === "u")) {
+    //         const msgPayload = getMsgPayload();
+    //         if (msgToSend.length <= 0) return;
+    //         if (msgPayload === "/end") {
+    //           logUpdate(`[*] Ended chat with ${threadTitle}.`);
+    //           process.stdin.pause();
+    //           process.stdin.removeListener("keypress", keypressHandler);
+    //           chatLoop = false;
+    //           resolve(key);
+    //         } else if (msgPayload === "/refresh") {
+    //           logUpdate("[*] Refreshing");
+    //           process.stdin.pause();
+    //           process.stdin.removeListener("keypress", keypressHandler);
+    //           resolve(key);
+    //         } else {
+    //           await thread.broadcastText(msgPayload);
+    //           msgToSend.length = 0;
+    //           updateThread();
+    //         }
+    //       } else if (key.name === "backspace") {
+    //         msgToSend.pop();
+    //         renderInput();
+    //       } else {
+    //         msgToSend.push(ch);
+    //         renderInput();
+    //       }
+    //     };
+    //     process.stdin.on("keypress", keypressHandler);
+    //     process.stdin.setRawMode(true);
+    //     process.stdin.resume();
+    //   });
+    //   clearInterval(threadRefreshInterval);
+    // }
   }
 }
 
