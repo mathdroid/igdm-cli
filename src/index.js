@@ -66,9 +66,7 @@ Notes:
   }
 
   device = new Client.Device(_username);
-  storage = new Client.CookieFileStorage(
-    __dirname + `/ig-cookie.${_username}.json`
-  );
+  storage = new Client.CookieMemoryStorage();
 
   let _password;
   if (!argv.password) {
@@ -104,8 +102,8 @@ Notes:
       senderId === userAccountId
         ? chalk.cyan("You")
         : (instagramAccounts[senderId] &&
-            chalk.magenta(instagramAccounts[senderId].username)) ||
-          chalk.red("A User");
+          chalk.magenta(instagramAccounts[senderId].username)) ||
+        chalk.red("A User");
 
     const payloadType = threadItem._params.itemType;
     let payloadMessage;
@@ -163,9 +161,9 @@ Notes:
       const renderInput = async () => {
         const threadItemsStr = thread.items.length
           ? thread.items
-              .sort((a, b) => a._params.created - b._params.created)
-              .map(i => parseMessageString(i))
-              .join("\n")
+            .sort((a, b) => a._params.created - b._params.created)
+            .map(i => parseMessageString(i))
+            .join("\n")
           : "There are no messages yet.";
         logUpdate(
           `${threadItemsStr}\n\nReply to ${threadTitle} ${chalk.green(
