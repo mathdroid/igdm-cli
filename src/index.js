@@ -132,44 +132,47 @@ Notes:
   const inboxSpinner = ora("Opening inbox").start();
   let ClientInbox = await new Client.Feed.Inbox(session)
   inboxSpinner.text = "Fetching recent threads";
-  let inboxBuffer = await ClientInbox.get()
-  inboxSpinner.succeed("All threads have been fetched");
+  let recentThreads = await ClientInbox.get()
+  let inboxBuffer = recentThreads.map(thread => ClientInbox.parseParams(ClientInbox.getParams()))
+  inboxSpinner.succeed("Recent threads");
 
-  while (mainLoop) {
+  console.log(inboxBuffer)
 
-    inboxBuffer.forEach(m =>
-      m.accounts.forEach(a => {
-        if (!instagramAccounts[a.id]) {
-          instagramAccounts[a.id] = a._params;
-        }
-      })
-    );
+  while (!mainLoop) {
 
-    const inboxFirst = inboxBuffer.filter(m => m.accounts.length).map(m => ({
-      name: `${chalk.underline(
-        `[${m._params.threadTitle}]`
-      )} - ${parseMessageString(m.items[0])}`,
-      value: m._params.threadId,
-      short: m._params.threadTitle
-    }));
+    // inboxBuffer.forEach(m =>
+    //   m.accounts.forEach(a => {
+    //     if (!instagramAccounts[a.id]) {
+    //       instagramAccounts[a.id] = a._params;
+    //     }
+    //   })
+    // );
 
-    const choices = ClientInbox.isMoreAvailable() ? [...inboxFirst, {
-      name: '[*] Fetch all items',
-      value: 'IGDM_FETCH_ALL',
-      short: 'Fetching all items'
-    }] : inboxFirst
+    // const inboxFirst = inboxBuffer.filter(m => m.accounts.length).map(m => ({
+    //   name: `${chalk.underline(
+    //     `[${m._params.threadTitle}]`
+    //   )} - ${parseMessageString(m.items[0])}`,
+    //   value: m._params.threadId,
+    //   short: m._params.threadTitle
+    // }));
 
-    const { id } = await inquirer.prompt({
-      name: "id",
-      message: "Inbox threads: ",
-      type: "list",
-      choices
-    });
+    // const choices = ClientInbox.isMoreAvailable() ? [...inboxFirst, {
+    //   name: '[*] Fetch all items',
+    //   value: 'IGDM_FETCH_ALL',
+    //   short: 'Fetching all items'
+    // }] : inboxFirst
 
-    let chatLoop = id !== 'IGDM_FETCH_ALL' ? true : false;
+    // const { id } = await inquirer.prompt({
+    //   name: "id",
+    //   message: "Inbox threads: ",
+    //   type: "list",
+    //   choices
+    // });
 
-    let thread = await Client.Thread.getById(session, id)
-    console.log(thread.parseParams(thread.getParams()))
+    // let chatLoop = id !== 'IGDM_FETCH_ALL' ? true : false;
+
+    // let thread = await Client.Thread.getById(session, id)
+    // console.log(thread.parseParams(thread.getParams()))
 
     // while (chatLoop) {
     //   let thread = await Client.Thread.getById(session, id);
