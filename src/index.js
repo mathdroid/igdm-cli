@@ -212,26 +212,28 @@ Notes:
     // console.log(thread.parseParams(thread.getParams()))
 
     while (chatLoop) {
-      let thread = await Client.Thread.getById(session, id);
-      let threadTitle = `[${thread._params.threadTitle}]`;
+      let Thread = await Client.Thread.getById(session, id);
+      let thread = Thread.parseParams(Thread.getParams())
+      let threadTitle = `[${thread.threadTitle}]`;
       let msgToSend = [];
       const getMsgPayload = () => msgToSend.join("");
       const renderInput = async () => {
         const threadItemsStr = thread.items.length
           ? thread.items
-            .sort((a, b) => a._params.created - b._params.created)
+            .sort((a, b) => a.created - b.created)
             .map(i => parseMessageString(i))
             .join("\n")
           : "There are no messages yet.";
         logUpdate(
-          `${threadItemsStr}\n\nReply to ${threadTitle} ${chalk.green(
+          `${threadItemsStr}\n\n${chalk.dim('`/refresh` to refresh chat')}\n${chalk.dim('`/end` to end chat')}\nReply to ${threadTitle} ${chalk.green(
             "›"
           )} ${getMsgPayload()}`
         );
       };
 
       const updateThread = async () => {
-        thread = await Client.Thread.getById(session, id);
+        Thread = await Client.Thread.getById(session, id);
+        thread = Thread.parseParams(Thread.getParams())
         renderInput();
       };
       const interval = ms(`${argv.interval}s`) || ms("5s");
@@ -264,7 +266,7 @@ Notes:
               process.stdin.removeListener("keypress", keypressHandler);
               resolve(key);
             } else {
-              await thread.broadcastText(msgPayload);
+              await Thread.broadcastText(msgPayload);
               msgToSend.length = 0;
               updateThread();
             }
