@@ -68,7 +68,7 @@ Notes:
   }
 
   device = new Client.Device(_username);
-  storage = new Client.CookieMemoryStorage();
+  storage = argv.persist ? new Client.CookieFileStorage(__dirname + ("/ig-cookie." + _username + ".json")) : new Client.CookieMemoryStorage();
 
   let _password;
   if (!argv.password) {
