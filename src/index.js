@@ -17,24 +17,26 @@ let device, storage;
 async function main(_argv) {
   const argv = mri(_argv, {
     string: ["username", "password"],
-    boolean: ["version", "help"],
+    boolean: ["version", "help", "persist"],
     alias: {
       username: "u",
       password: "p",
       interval: "i",
       version: "v",
-      help: "h"
+      help: "h",
+      persist: 's'
     }
   });
   console.log(chalk.dim(`igdm-cli v${pkg.version}`));
-  updateNotifier({ pkg }).notify();
+  const notifier = updateNotifier({ pkg })
+  notifier.notify()
   if (argv.version) process.exit(0);
   if (argv.help) {
     console.log(`
 Usage:
     $  igdm
-    $  igdm [-h] | [-v] | [-u <username>] [-p <password>] [-i <polling interval>]
-    $  igdm [--help] | [--version] | [--username=<username>] [--password=<password>] [--interval=<polling interval>]
+    $  igdm [-h] | [-v] | [-s] | [-u <username>] [-p <password>] [-i <polling interval>]
+    $  igdm [--help] | [--version] | [--persist] | [--username=<username>] [--password=<password>] [--interval=<polling interval>]
 
 Options:
     -h, --help                  Show this screen.
@@ -105,7 +107,7 @@ Notes:
   let instagramAccounts = {};
 
   const parseMessageString = threadItem => {
-    const senderId = threadItem._params.userId;
+    const senderId = threadItem.userId;
     const senderUsername =
       senderId === userAccountId
         ? chalk.cyan("You")
@@ -113,12 +115,12 @@ Notes:
           chalk.magenta(instagramAccounts[senderId].username)) ||
         chalk.red("A User");
 
-    const payloadType = threadItem._params.itemType;
+    const payloadType = threadItem.itemType;
     let payloadMessage;
-    const payloadCreated = threadItem._params.created;
+    const payloadCreated = threadItem.created;
     switch (payloadType) {
       case "text":
-        payloadMessage = `"${threadItem._params.text}"`;
+        payloadMessage = `"${threadItem.text}"`;
         break;
       default:
         payloadMessage = `[a non-text message of type ${payloadType}]`;
@@ -129,14 +131,50 @@ Notes:
     )}`;
   };
 
+  let ClientInbox
+  let inboxBuffer = []
+
+  const getOlder = async () => (await ClientInbox.get()).map(thread => thread.parseParams(thread.getParams()))
+  const getAllOlder = async () => (await ClientInbox.all()).map(thread => thread.parseParams(thread.getParams()))
+  const refreshInbox = async () => {
+    ClientInbox = await new Client.Feed.Inbox(session)
+    inboxBuffer = await getOlder()
+  }
+  const fetchOlderToBuffer = async () => {
+    inboxBuffer = [...inboxBuffer, ...(await getOlder())]
+  }
+  const fetchAllToBuffer = async () => {
+    inboxBuffer = [...inboxBuffer, ...(await getAllOlder())]
+  }
+
+  const createChoicesFromBuffer = async () => {
+    return inboxBuffer.filter(m => m.accounts.length).map(m => ({
+      name: `${chalk.underline(
+        `[${m.threadTitle}]`
+      )} - ${parseMessageString(m.items[0])}`,
+      value: m.threadId,
+      short: m.threadTitle
+    }));
+
+  }
+
   const inboxSpinner = ora("Opening inbox").start();
-  let ClientInbox = await new Client.Feed.Inbox(session)
   inboxSpinner.text = "Fetching recent threads";
-  let recentThreads = await ClientInbox.get()
-  let inboxBuffer = recentThreads.map(thread => ClientInbox.parseParams(ClientInbox.getParams()))
+  await refreshInbox()
   inboxSpinner.succeed("Recent threads");
 
-  console.log(inboxBuffer)
+
+  console.log(createChoicesFromBuffer())
+  // inboxBuffer.forEach(thread => {
+  //   console.log(thread.threadTitle)
+  // })
+  // setTimeout(async () => {
+  //   let secondTime = await ClientInbox.all()
+  //   let second = secondTime.map(thread => thread.parseParams(thread.getParams()))
+  //   second.forEach(thread => {
+  //     console.log(thread.threadTitle)
+  //   })
+  // }, 5000)
 
   while (!mainLoop) {
 
