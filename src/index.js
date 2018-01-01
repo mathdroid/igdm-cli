@@ -147,7 +147,7 @@ Notes:
     inboxBuffer = [...inboxBuffer, ...(await getAllOlder())]
   }
 
-  const createChoicesFromBuffer = async () => {
+  const createChoicesFromBuffer = () => {
     return inboxBuffer.filter(m => m.accounts.length).map(m => ({
       name: `${chalk.underline(
         `[${m.threadTitle}]`
@@ -163,126 +163,125 @@ Notes:
   await refreshInbox()
   inboxSpinner.succeed("Recent threads");
 
+  const CHOICE_FETCH_OLDER = {
+    name: 'Fetch older items',
+    value: 'CHOICE_FETCH_OLDER',
+    short: 'Fetch older items'
+  }
+  const CHOICE_FETCH_ALL = {
+    name: 'Fetch all items',
+    value: 'CHOICE_FETCH_ALL',
+    short: 'Fetch all items'
+  }
+  const CHOICE_REFRESH = {
+    name: 'Refresh inbox',
+    value: 'CHOICE_REFRESH',
+    short: 'Refresh inbox'
+  }
 
-  console.log(createChoicesFromBuffer())
-  // inboxBuffer.forEach(thread => {
-  //   console.log(thread.threadTitle)
-  // })
-  // setTimeout(async () => {
-  //   let secondTime = await ClientInbox.all()
-  //   let second = secondTime.map(thread => thread.parseParams(thread.getParams()))
-  //   second.forEach(thread => {
-  //     console.log(thread.threadTitle)
-  //   })
-  // }, 5000)
+  while (mainLoop) {
+    inboxBuffer.forEach(m =>
+      m.accounts.forEach(a => {
+        if (!instagramAccounts[a.id]) {
+          instagramAccounts[a.id] = a;
+        }
+      })
+    );
+    const choices = createChoicesFromBuffer()
+    const choicesWithMenu = ClientInbox.isMoreAvailable() ? [...choices, CHOICE_FETCH_OLDER, CHOICE_FETCH_ALL, CHOICE_REFRESH] : [...choices, CHOICE_REFRESH]
 
-  while (!mainLoop) {
+    const { id } = await inquirer.prompt({
+      name: "id",
+      message: "Inbox threads: ",
+      type: "list",
+      choices: choicesWithMenu
+    });
 
-    // inboxBuffer.forEach(m =>
-    //   m.accounts.forEach(a => {
-    //     if (!instagramAccounts[a.id]) {
-    //       instagramAccounts[a.id] = a._params;
-    //     }
-    //   })
-    // );
+    let chatLoop = !`${id}`.includes('CHOICE_') ? true : false;
+    let thread
 
-    // const inboxFirst = inboxBuffer.filter(m => m.accounts.length).map(m => ({
-    //   name: `${chalk.underline(
-    //     `[${m._params.threadTitle}]`
-    //   )} - ${parseMessageString(m.items[0])}`,
-    //   value: m._params.threadId,
-    //   short: m._params.threadTitle
-    // }));
-
-    // const choices = ClientInbox.isMoreAvailable() ? [...inboxFirst, {
-    //   name: '[*] Fetch all items',
-    //   value: 'IGDM_FETCH_ALL',
-    //   short: 'Fetching all items'
-    // }] : inboxFirst
-
-    // const { id } = await inquirer.prompt({
-    //   name: "id",
-    //   message: "Inbox threads: ",
-    //   type: "list",
-    //   choices
-    // });
-
-    // let chatLoop = id !== 'IGDM_FETCH_ALL' ? true : false;
+    if (id === CHOICE_FETCH_ALL.value) {
+      await fetchAllToBuffer()
+    } else if (id === CHOICE_FETCH_OLDER.value) {
+      await fetchOlderToBuffer()
+    } else if (id === CHOICE_REFRESH.value) {
+      await refreshInbox()
+    }
 
     // let thread = await Client.Thread.getById(session, id)
     // console.log(thread.parseParams(thread.getParams()))
 
-    // while (chatLoop) {
-    //   let thread = await Client.Thread.getById(session, id);
-    //   let threadTitle = `[${thread._params.threadTitle}]`;
-    //   let msgToSend = [];
-    //   const getMsgPayload = () => msgToSend.join("");
-    //   const renderInput = async () => {
-    //     const threadItemsStr = thread.items.length
-    //       ? thread.items
-    //         .sort((a, b) => a._params.created - b._params.created)
-    //         .map(i => parseMessageString(i))
-    //         .join("\n")
-    //       : "There are no messages yet.";
-    //     logUpdate(
-    //       `${threadItemsStr}\n\nReply to ${threadTitle} ${chalk.green(
-    //         "›"
-    //       )} ${getMsgPayload()}`
-    //     );
-    //   };
+    while (chatLoop) {
+      let thread = await Client.Thread.getById(session, id);
+      let threadTitle = `[${thread._params.threadTitle}]`;
+      let msgToSend = [];
+      const getMsgPayload = () => msgToSend.join("");
+      const renderInput = async () => {
+        const threadItemsStr = thread.items.length
+          ? thread.items
+            .sort((a, b) => a._params.created - b._params.created)
+            .map(i => parseMessageString(i))
+            .join("\n")
+          : "There are no messages yet.";
+        logUpdate(
+          `${threadItemsStr}\n\nReply to ${threadTitle} ${chalk.green(
+            "›"
+          )} ${getMsgPayload()}`
+        );
+      };
 
-    //   const updateThread = async () => {
-    //     thread = await Client.Thread.getById(session, id);
-    //     renderInput();
-    //   };
-    //   const interval = ms(`${argv.interval}s`) || ms("5s");
-    //   const threadRefreshInterval = setInterval(updateThread, interval);
+      const updateThread = async () => {
+        thread = await Client.Thread.getById(session, id);
+        renderInput();
+      };
+      const interval = ms(`${argv.interval}s`) || ms("5s");
+      const threadRefreshInterval = setInterval(updateThread, interval);
 
-    //   renderInput();
+      renderInput();
 
-    //   await new Promise(resolve => {
-    //     const keypressHandler = async (ch, key = {}) => {
-    //       if (hasAnsi(key.sequence)) return;
-    //       if (key.ctrl && key.name === "c") {
-    //         if (msgToSend.length <= 1) {
-    //           logUpdate();
-    //           // readline.moveCursor(process.stdout, 0, -1);
-    //         }
-    //         process.exit();
-    //       }
-    //       if (key.name === "return" || (key.ctrl && key.name === "u")) {
-    //         const msgPayload = getMsgPayload();
-    //         if (msgToSend.length <= 0) return;
-    //         if (msgPayload === "/end") {
-    //           logUpdate(`[*] Ended chat with ${threadTitle}.`);
-    //           process.stdin.pause();
-    //           process.stdin.removeListener("keypress", keypressHandler);
-    //           chatLoop = false;
-    //           resolve(key);
-    //         } else if (msgPayload === "/refresh") {
-    //           logUpdate("[*] Refreshing");
-    //           process.stdin.pause();
-    //           process.stdin.removeListener("keypress", keypressHandler);
-    //           resolve(key);
-    //         } else {
-    //           await thread.broadcastText(msgPayload);
-    //           msgToSend.length = 0;
-    //           updateThread();
-    //         }
-    //       } else if (key.name === "backspace") {
-    //         msgToSend.pop();
-    //         renderInput();
-    //       } else {
-    //         msgToSend.push(ch);
-    //         renderInput();
-    //       }
-    //     };
-    //     process.stdin.on("keypress", keypressHandler);
-    //     process.stdin.setRawMode(true);
-    //     process.stdin.resume();
-    //   });
-    //   clearInterval(threadRefreshInterval);
-    // }
+      await new Promise(resolve => {
+        const keypressHandler = async (ch, key = {}) => {
+          if (hasAnsi(key.sequence)) return;
+          if (key.ctrl && key.name === "c") {
+            if (msgToSend.length <= 1) {
+              logUpdate();
+              // readline.moveCursor(process.stdout, 0, -1);
+            }
+            process.exit();
+          }
+          if (key.name === "return" || (key.ctrl && key.name === "u")) {
+            const msgPayload = getMsgPayload();
+            if (msgToSend.length <= 0) return;
+            if (msgPayload === "/end") {
+              logUpdate(`[*] Ended chat with ${threadTitle}.`);
+              process.stdin.pause();
+              process.stdin.removeListener("keypress", keypressHandler);
+              chatLoop = false;
+              resolve(key);
+            } else if (msgPayload === "/refresh") {
+              logUpdate("[*] Refreshing");
+              process.stdin.pause();
+              process.stdin.removeListener("keypress", keypressHandler);
+              resolve(key);
+            } else {
+              await thread.broadcastText(msgPayload);
+              msgToSend.length = 0;
+              updateThread();
+            }
+          } else if (key.name === "backspace") {
+            msgToSend.pop();
+            renderInput();
+          } else {
+            msgToSend.push(ch);
+            renderInput();
+          }
+        };
+        process.stdin.on("keypress", keypressHandler);
+        process.stdin.setRawMode(true);
+        process.stdin.resume();
+      });
+      clearInterval(threadRefreshInterval);
+    }
   }
 }
 
