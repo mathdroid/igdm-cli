@@ -255,6 +255,9 @@ Notes:
             const msgPayload = getMsgPayload();
             if (msgToSend.length <= 0) return;
             if (msgPayload === "/end") {
+
+              logUpdate(`[*] Ending chat with ${threadTitle}, refreshing inbox.`);
+              await refreshInbox()
               logUpdate(`[*] Ended chat with ${threadTitle}.`);
               process.stdin.pause();
               process.stdin.removeListener("keypress", keypressHandler);
