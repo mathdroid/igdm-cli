@@ -16,9 +16,9 @@ $ npm i -g igdm-cli
 igdm-cli
 
 Usage:
-    igdm
-    igdm [-h] | [-v] | [-u <username>] [-p <password>] [-i <polling interval>]
-    igdm [--help] | [--version] | [--username=<username>] [--password=<password>] [--interval=<polling interval>]
+    $  igdm
+    $  igdm [-h] | [-v] | [-s] | [-u <username>] [-p <password>] [-i <polling interval>]
+    $  igdm [--help] | [--version] | [--persist] | [--username=<username>] [--password=<password>] [--interval=<polling interval>]
 
 Options:
     -h, --help                  Show this screen.
