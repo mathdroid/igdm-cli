@@ -29,7 +29,8 @@
     "babel-cli": "^6.26.0",
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.6.1",
-    "np": "^2.18.3"
+    "np": "^2.18.3",
+    "release": "^3.0.3"
   },
   "repository": {
     "type": "git",
@@ -37,6 +38,7 @@
   },
   "scripts": {
     "build": "babel src -d bin",
-    "release": "np"
+    "release": "release",
+    "release:minor": "release minor"
   }
 }
