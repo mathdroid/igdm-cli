@@ -41,6 +41,7 @@ Usage:
 Options:
     -h, --help                  Show this screen.
     -v, --version               Show version.
+    -s, --persist               Save session in disk.
     -u, --username <username>   Set Instagram username. [default: will prompt]
     -p, --password <password>   Set Instagram password. [default: will prompt]
     -i, --interval <interval>   Set polling interval (seconds) in chat rooms [default: 5]
