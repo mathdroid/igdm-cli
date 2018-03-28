@@ -143,6 +143,12 @@ Notes:
       case "text":
         payloadMessage = `"${threadItem.text}"`;
         break;
+      case "media":
+        payloadMessage = JSON.stringify(threadItem.media);
+        payloadMessage = `[media] › ${chalk.underline(
+          threadItem.media[0].url
+        )}`;
+        break;
       default:
         payloadMessage = `[a non-text message of type ${payloadType}]`;
         break;
@@ -178,7 +184,7 @@ Notes:
   const createChoicesFromBuffer = () => {
     return (
       inboxBuffer
-        // .filter(m => !m.threadTitle.includes("")) CUSTOM FILTER
+        // .filter(m => !m.threadTitle.includes("")) // CUSTOM FILTER
         .filter(m => m.accounts.length)
         .map(m => ({
           name: `${chalk.underline(
