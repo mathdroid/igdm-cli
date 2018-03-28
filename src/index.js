@@ -149,6 +149,9 @@ Notes:
           threadItem.media[0].url
         )}`;
         break;
+      case "like":
+        payloadMessage = "♥";
+        break;
       default:
         payloadMessage = `[a non-text message of type ${payloadType}]`;
         break;
