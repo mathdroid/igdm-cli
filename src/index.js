@@ -84,7 +84,7 @@ Notes:
     _username = argv.username;
   }
 
-  device = new Client.Device(`${_username}${Date.now()}`);
+  device = new Client.Device(`instagram.com/${_username}`);
   storage = argv.persist
     ? new Client.CookieFileStorage(
         __dirname + ("/ig-cookie." + _username + ".json")
