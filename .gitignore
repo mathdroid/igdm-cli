@@ -65,3 +65,9 @@ typings/
 
 
 # End of https://www.gitignore.io/api/node
+
+# Ignores from marjanovicsteva/igdm-cli fork
+
+CHANGELOG
+errors/*
+package-lock.json
