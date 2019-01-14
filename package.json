@@ -35,7 +35,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mathdroid/igdm-cli.git"
+    "url": "git@github.com:mathdroid/igdm-cli.git"
   },
   "scripts": {
     "build": "ncc build ./src -o bin",
