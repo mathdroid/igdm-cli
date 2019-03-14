@@ -22,9 +22,9 @@ async function main(_argv) {
       username: "u",
       password: "p",
       interval: "i",
-      version: "v",
-      help: "h",
-      persist: "s"
+      version:  "v",
+      help:     "h",
+      persist:  "s"
     }
   });
   console.log(chalk.dim(`igdm-cli v${pkg.version}`));
@@ -95,7 +95,7 @@ Notes:
   if (!argv.password) {
     const { password } = await inquirer.prompt({
       name: "password",
-      message: "Instagram password: ",
+      message: "Instagram Password: ",
       type: "password"
     });
     _password = password;
@@ -115,8 +115,10 @@ Notes:
       _password
     );
   } catch (e) {
-    console.error(e);
-    console.log(`can't login`);
+    // Errors logging in
+    if (e.name == "AuthenticationError") {
+      loginSpinner.fail(`Can't log in. ${e.message}`);
+    }
     process.exit(1);
   }
 
